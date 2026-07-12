@@ -44,6 +44,43 @@ router.post('/', authenticate, async (req, res) => {
   } catch (err) { res.status(500).json({ error: err.message }); }
 });
 
+// Employees can update status of tasks assigned to them (in_progress / resolved only)
+router.patch('/:id/status', authenticate, async (req, res) => {
+  const { status } = req.body;
+  const allowedEmployeeStatuses = ['in_progress', 'resolved'];
+
+  if (!allowedEmployeeStatuses.includes(status)) {
+    return res.status(403).json({ error: 'Employees can only set status to in_progress or resolved' });
+  }
+
+  try {
+    // Verify this task is assigned to the requesting employee (or user is a manager)
+    const check = await query('SELECT * FROM maintenance_requests WHERE id = $1', [req.params.id]);
+    if (!check.rows[0]) return res.status(404).json({ error: 'Maintenance request not found' });
+
+    const mr = check.rows[0];
+    const isManager = ['admin', 'asset_manager', 'dept_head'].includes(req.user.role);
+    if (!isManager && mr.assigned_to !== req.user.id) {
+      return res.status(403).json({ error: 'You can only update tasks assigned to you' });
+    }
+
+    const result = await query(
+      `UPDATE maintenance_requests SET status = $1, resolved_at = CASE WHEN $1 = 'resolved' THEN NOW() ELSE resolved_at END, updated_at = NOW()
+       WHERE id = $2 RETURNING *`,
+      [status, req.params.id]
+    );
+
+    if (status === 'resolved') {
+      await query('UPDATE assets SET status = $1 WHERE id = $2', ['available', mr.asset_id]);
+    }
+
+    const io = req.app.get('io');
+    io.to(`org:${req.user.org_id}`).emit('maintenance:updated', result.rows[0]);
+    await logActivity(req.user, `maintenance.${status}`, 'maintenance', mr.id, `Maintenance status updated to ${status}`);
+    res.json(result.rows[0]);
+  } catch (err) { res.status(500).json({ error: err.message }); }
+});
+
 router.patch('/:id', authenticate, requireManager, async (req, res) => {
   const { title, description, priority, status, assigned_to, estimated_cost, actual_cost, resolution_notes } = req.body;
   try {

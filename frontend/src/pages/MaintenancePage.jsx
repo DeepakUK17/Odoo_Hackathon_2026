@@ -57,16 +57,18 @@ export default function MaintenancePage() {
   };
 
   const handleStatusChange = async (item, newStatus) => {
-    // Kanban constraint rules
-    const invalidMoves = ['pending', 'approved', 'assigned'];
-    if ((item.status === 'in_progress' || item.status === 'resolved') && invalidMoves.includes(newStatus)) {
-      toast.error('Cannot move a task backwards to this state once started.');
+    const isEmployee = user?.role === 'employee';
+    const allowedForEmployee = ['in_progress', 'resolved'];
+
+    // Kanban constraint: employees can only move to in_progress or resolved
+    if (isEmployee && !allowedForEmployee.includes(newStatus)) {
+      toast.error('You can only move tasks to In Progress or Resolved.');
       return;
     }
-    
-    // Employee column constraint
-    if (user?.role === 'employee' && newStatus !== 'in_progress' && newStatus !== 'resolved') {
-      toast.error('Employees can only move tasks to In Progress or Resolved.');
+
+    // Prevent backward moves for resolved tasks
+    if (item.status === 'resolved' && newStatus !== 'resolved') {
+      toast.error('Cannot reopen a resolved task.');
       return;
     }
 
@@ -75,8 +77,12 @@ export default function MaintenancePage() {
     setRequests(requests.map(r => r.id === item.id ? { ...r, status: newStatus } : r));
 
     try {
-      await api.patch(`/maintenance/${item.id}`, { status: newStatus });
-      // Background sync to ensure accuracy
+      // Use dedicated /status endpoint for employees (no requireManager middleware)
+      if (isEmployee) {
+        await api.patch(`/maintenance/${item.id}/status`, { status: newStatus });
+      } else {
+        await api.patch(`/maintenance/${item.id}`, { status: newStatus });
+      }
       loadData(false);
     } catch (err) {
       toast.error(err.error || 'Failed to update status');
@@ -125,11 +131,12 @@ export default function MaintenancePage() {
           items={requests.map(r => ({
             ...r, 
             title: r.title,
-            tag: r.asset_tag,
+            tag: r.asset_tag || r.tag,
             priority: r.priority
           }))}
           onStatusChange={handleStatusChange}
-          onCardClick={openModal}
+          onCardClick={user?.role !== 'employee' ? openModal : undefined}
+          employeeView={user?.role === 'employee'}
         />
       )}
 
