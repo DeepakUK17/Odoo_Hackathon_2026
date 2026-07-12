@@ -16,11 +16,11 @@ router.get('/dashboard', authenticate, async (req, res) => {
         COUNT(*) FILTER (WHERE status = 'retired') as retired,
         AVG(health_score) as avg_health
         FROM assets WHERE org_id = $1`, [orgId]),
-      query(`SELECT COUNT(*) FILTER (WHERE status != 'resolved' AND status != 'cancelled') as open_count,
-        COUNT(*) FILTER (WHERE status = 'resolved') as resolved_count
+      query(`SELECT COUNT(*) FILTER (WHERE mr.status != 'resolved' AND mr.status != 'cancelled') as open_count,
+        COUNT(*) FILTER (WHERE mr.status = 'resolved') as resolved_count
         FROM maintenance_requests mr JOIN assets a ON mr.asset_id = a.id WHERE a.org_id = $1`, [orgId]),
-      query(`SELECT COUNT(*) FILTER (WHERE status = 'confirmed' AND start_time > NOW()) as upcoming,
-        COUNT(*) FILTER (WHERE status = 'confirmed' AND start_time <= NOW() AND end_time >= NOW()) as active
+      query(`SELECT COUNT(*) FILTER (WHERE b.status = 'confirmed' AND b.start_time > NOW()) as upcoming,
+        COUNT(*) FILTER (WHERE b.status = 'confirmed' AND b.start_time <= NOW() AND b.end_time >= NOW()) as active
         FROM bookings b JOIN resources r ON b.resource_id = r.id WHERE r.org_id = $1`, [orgId]),
       query(`SELECT al.id, a.tag, a.name as asset_name, e.name as employee_name, d.name as dept_name, al.allocated_at
         FROM allocations al JOIN assets a ON al.asset_id = a.id JOIN employees e ON al.employee_id = e.id
