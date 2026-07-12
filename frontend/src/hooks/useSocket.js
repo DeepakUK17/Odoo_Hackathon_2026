@@ -10,7 +10,7 @@ export const useSocket = (user, onNotification) => {
     if (!user || initialized.current) return;
     initialized.current = true;
 
-    socket = io('http://localhost:5000', {
+    socket = io(import.meta.env.VITE_SOCKET_URL || 'http://localhost:5000', {
       transports: ['websocket'],  // Match server - skip polling, direct websocket
       withCredentials: true,
       reconnectionAttempts: 5,
