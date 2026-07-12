@@ -119,7 +119,7 @@ img { max-width: 100%; }
   flex-direction: column;
   z-index: 200;
   transition: width 0.3s ease;
-  overflow: hidden;
+  overflow: visible;
 }
 
 .sidebar.collapsed { width: var(--sidebar-collapsed); }

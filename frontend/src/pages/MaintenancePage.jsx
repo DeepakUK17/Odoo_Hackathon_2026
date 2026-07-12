@@ -54,12 +54,17 @@ export default function MaintenancePage() {
   };
 
   const handleStatusChange = async (item, newStatus) => {
+    // Optimistic UI Update for instant feedback
+    const originalRequests = [...requests];
+    setRequests(requests.map(r => r.id === item.id ? { ...r, status: newStatus } : r));
+
     try {
       await api.patch(`/maintenance/${item.id}`, { status: newStatus });
-      loadData(false); // Refresh without full loading spinner
+      // Background sync to ensure accuracy
+      loadData(false);
     } catch (err) {
       showError(err.error || 'Failed to update status');
-      loadData(false); // Reset board
+      setRequests(originalRequests); // Revert on failure
     }
   };
 
