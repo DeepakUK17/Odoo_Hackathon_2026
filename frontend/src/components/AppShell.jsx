@@ -5,16 +5,16 @@ import { useSocket } from '../hooks/useSocket';
 import api from '../services/api';
 
 const NAV_ITEMS = [
-  { path: '/dashboard',    label: 'Dashboard',       icon: '⊡', section: 'Main' },
-  { path: '/ai-assistant', label: 'AI Assistant',    icon: '✦', section: 'Main', badge: 'AI' },
-  { path: '/assets',       label: 'Assets',          icon: '◈', section: 'Management' },
-  { path: '/allocation',   label: 'Allocation',      icon: '↗', section: 'Management' },
-  { path: '/maintenance',  label: 'Maintenance',      icon: '⚙', section: 'Management' },
-  { path: '/booking',      label: 'Booking',         icon: '⊟', section: 'Management' },
-  { path: '/audit',        label: 'Audit',           icon: '✓', section: 'Management' },
-  { path: '/reports',      label: 'Reports',         icon: '⊞', section: 'Analytics' },
-  { path: '/notifications',label: 'Notifications',   icon: '🔔', section: 'Analytics' },
-  { path: '/org-setup',    label: 'Organization',    icon: '◻', section: 'Settings' },
+  { path: '/dashboard',    label: 'Dashboard',       icon: '⊡', section: 'Main', roles: ['admin', 'asset_manager', 'dept_head', 'employee'] },
+  { path: '/ai-assistant', label: 'AI Assistant',    icon: '✦', section: 'Main', badge: 'AI', roles: ['admin', 'asset_manager', 'dept_head', 'employee'] },
+  { path: '/assets',       label: 'Assets',          icon: '◈', section: 'Management', roles: ['admin', 'asset_manager', 'dept_head'] },
+  { path: '/allocation',   label: 'Allocation',      icon: '↗', section: 'Management', roles: ['admin', 'asset_manager', 'dept_head'] },
+  { path: '/maintenance',  label: 'Maintenance',      icon: '⚙', section: 'Management', roles: ['admin', 'asset_manager', 'dept_head', 'employee'] },
+  { path: '/booking',      label: 'Booking',         icon: '⊟', section: 'Management', roles: ['admin', 'asset_manager', 'dept_head', 'employee'] },
+  { path: '/audit',        label: 'Audit',           icon: '✓', section: 'Management', roles: ['admin', 'asset_manager'] },
+  { path: '/reports',      label: 'Reports',         icon: '⊞', section: 'Analytics', roles: ['admin', 'asset_manager', 'dept_head'] },
+  { path: '/notifications',label: 'Notifications',   icon: '🔔', section: 'Analytics', roles: ['admin', 'asset_manager', 'dept_head', 'employee'] },
+  { path: '/org-setup',    label: 'Organization',    icon: '◻', section: 'Settings', roles: ['admin'] },
 ];
 
 const SECTIONS = ['Main', 'Management', 'Analytics', 'Settings'];
@@ -72,7 +72,8 @@ export default function AppShell() {
         </div>
         <nav className="sidebar-nav">
           {SECTIONS.map(section => {
-            const items = NAV_ITEMS.filter(n => n.section === section);
+            const items = NAV_ITEMS.filter(n => n.section === section && (!user || !n.roles || n.roles.includes(user.role)));
+            if (items.length === 0) return null;
             return (
               <div key={section}>
                 {!collapsed && <div className="sidebar-section-label">{section}</div>}
