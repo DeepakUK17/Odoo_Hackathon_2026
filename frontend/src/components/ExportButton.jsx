@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import api from '../services/api';
 
-export default function ExportButton({ module, filename = 'Export' }) {
+export default function ExportButton({ module, filename = 'Export', label = 'Export Excel' }) {
   const [exporting, setExporting] = useState(false);
 
   const handleExport = async () => {
@@ -26,7 +26,7 @@ export default function ExportButton({ module, filename = 'Export' }) {
 
   return (
     <button className="btn btn-secondary" onClick={handleExport} disabled={exporting}>
-      {exporting ? 'Exporting...' : '↓ Export Excel'}
+      {exporting ? 'Exporting...' : `↓ ${label}`}
     </button>
   );
 }

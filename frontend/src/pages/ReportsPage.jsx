@@ -20,7 +20,8 @@ export default function ReportsPage() {
   if (loading) return <div className="skeleton" style={{ height: 600 }} />;
   if (!data) return <div className="empty-state">Failed to load reports</div>;
 
-  const { costByCategory, conditionBreakdown } = data;
+  const costByCategory = data.costByCategory || [];
+  const conditionBreakdown = data.conditionBreakdown || [];
 
   const costData = {
     labels: costByCategory.map(c => c.category),
@@ -71,10 +72,10 @@ export default function ReportsPage() {
         <div className="card-body">
           <p className="text-muted mb-6">Download complete tabular data for external reporting or auditing.</p>
           <div className="grid-4">
-            <ExportButton module="assets" filename="Asset_Registry" />
-            <ExportButton module="allocations" filename="Allocation_History" />
-            <ExportButton module="maintenance" filename="Maintenance_Logs" />
-            <ExportButton module="employees" filename="Employee_Directory" />
+            <ExportButton module="assets" filename="Asset_Registry" label="Export Assets" />
+            <ExportButton module="allocations" filename="Allocation_History" label="Export Allocations" />
+            <ExportButton module="maintenance" filename="Maintenance_Logs" label="Export Maintenance" />
+            <ExportButton module="employees" filename="Employee_Directory" label="Export Employees" />
           </div>
         </div>
       </div>
