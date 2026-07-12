@@ -3,18 +3,23 @@ import { useState, useEffect } from 'react';
 import { useAuth } from '../store/AuthContext';
 import { useSocket } from '../hooks/useSocket';
 import api from '../services/api';
+import { 
+  LayoutDashboard, Sparkles, Box, ArrowUpRight, 
+  Wrench, CalendarCheck, ClipboardCheck, PieChart, 
+  Bell, Building, LogOut 
+} from 'lucide-react';
 
 const NAV_ITEMS = [
-  { path: '/dashboard',    label: 'Dashboard',       icon: '⊡', section: 'Main', roles: ['admin', 'asset_manager', 'dept_head', 'employee'] },
-  { path: '/ai-assistant', label: 'AI Assistant',    icon: '✦', section: 'Main', badge: 'AI', roles: ['admin', 'asset_manager', 'dept_head', 'employee'] },
-  { path: '/assets',       label: 'Assets',          icon: '◈', section: 'Management', roles: ['admin', 'asset_manager', 'dept_head'] },
-  { path: '/allocation',   label: 'Allocation',      icon: '↗', section: 'Management', roles: ['admin', 'asset_manager', 'dept_head'] },
-  { path: '/maintenance',  label: 'Maintenance',      icon: '⚙', section: 'Management', roles: ['admin', 'asset_manager', 'dept_head', 'employee'] },
-  { path: '/booking',      label: 'Booking',         icon: '⊟', section: 'Management', roles: ['admin', 'asset_manager', 'dept_head', 'employee'] },
-  { path: '/audit',        label: 'Audit',           icon: '✓', section: 'Management', roles: ['admin', 'asset_manager'] },
-  { path: '/reports',      label: 'Reports',         icon: '⊞', section: 'Analytics', roles: ['admin', 'asset_manager', 'dept_head'] },
-  { path: '/notifications',label: 'Notifications',   icon: '🔔', section: 'Analytics', roles: ['admin', 'asset_manager', 'dept_head', 'employee'] },
-  { path: '/org-setup',    label: 'Organization',    icon: '◻', section: 'Settings', roles: ['admin'] },
+  { path: '/dashboard',    label: 'Dashboard',       icon: <LayoutDashboard size={18} />, section: 'Main', roles: ['admin', 'asset_manager', 'dept_head', 'employee'] },
+  { path: '/ai-assistant', label: 'AI Assistant',    icon: <Sparkles size={18} />, section: 'Main', badge: 'AI', roles: ['admin', 'asset_manager', 'dept_head', 'employee'] },
+  { path: '/assets',       label: 'Assets',          icon: <Box size={18} />, section: 'Management', roles: ['admin', 'asset_manager', 'dept_head'] },
+  { path: '/allocation',   label: 'Allocation',      icon: <ArrowUpRight size={18} />, section: 'Management', roles: ['admin', 'asset_manager', 'dept_head'] },
+  { path: '/maintenance',  label: 'Maintenance',      icon: <Wrench size={18} />, section: 'Management', roles: ['admin', 'asset_manager', 'dept_head', 'employee'] },
+  { path: '/booking',      label: 'Booking',         icon: <CalendarCheck size={18} />, section: 'Management', roles: ['admin', 'asset_manager', 'dept_head', 'employee'] },
+  { path: '/audit',        label: 'Audit',           icon: <ClipboardCheck size={18} />, section: 'Management', roles: ['admin', 'asset_manager'] },
+  { path: '/reports',      label: 'Reports',         icon: <PieChart size={18} />, section: 'Analytics', roles: ['admin', 'asset_manager', 'dept_head'] },
+  { path: '/notifications',label: 'Notifications',   icon: <Bell size={18} />, section: 'Analytics', roles: ['admin', 'asset_manager', 'dept_head', 'employee'] },
+  { path: '/org-setup',    label: 'Organization',    icon: <Building size={18} />, section: 'Settings', roles: ['admin'] },
 ];
 
 const SECTIONS = ['Main', 'Management', 'Analytics', 'Settings'];
@@ -85,7 +90,7 @@ export default function AppShell() {
                     onClick={() => navigate(item.path)}
                     title={collapsed ? item.label : undefined}
                   >
-                    <span className="nav-icon" style={{ fontSize: 16 }}>{item.icon}</span>
+                    <span className="nav-icon" style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', width: 24, height: 24 }}>{item.icon}</span>
                     {!collapsed && <span>{item.label}</span>}
                     {!collapsed && item.badge === 'AI' && (
                       <span className="nav-badge" style={{ background: 'linear-gradient(135deg, var(--accent), var(--accent-green))', fontSize: '9px' }}>AI</span>
@@ -115,10 +120,10 @@ export default function AppShell() {
                 <div style={{ fontSize: '0.8rem', fontWeight: 600, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{user?.name}</div>
                 <div style={{ fontSize: '0.7rem', color: 'var(--text-muted)', textTransform: 'capitalize' }}>{user?.role}</div>
               </div>
-              <button id="logout-btn" onClick={logout} style={{ background: 'none', border: 'none', color: 'var(--text-muted)', fontSize: 16, cursor: 'pointer' }} title="Logout">⏻</button>
+              <button id="logout-btn" onClick={logout} style={{ background: 'none', border: 'none', color: 'var(--text-muted)', cursor: 'pointer', display: 'flex', alignItems: 'center' }} title="Logout"><LogOut size={18} /></button>
             </div>
           ) : (
-            <div onClick={logout} style={{ display:'flex', justifyContent:'center', color:'var(--text-muted)', cursor:'pointer' }}>⏻</div>
+            <div onClick={logout} style={{ display:'flex', justifyContent:'center', color:'var(--text-muted)', cursor:'pointer' }} title="Logout"><LogOut size={18} /></div>
           )}
         </div>
         {/* Collapse toggle */}

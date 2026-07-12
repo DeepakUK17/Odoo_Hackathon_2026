@@ -134,16 +134,19 @@ img { max-width: 100%; }
 }
 
 .sidebar-logo-icon {
-  width: 32px; height: 32px;
+  width: 36px; height: 36px;
   background: linear-gradient(135deg, var(--accent), var(--accent-green));
-  border-radius: var(--radius-sm);
+  border-radius: 10px;
   display: flex;
   align-items: center;
   justify-content: center;
   font-weight: 800;
-  font-size: 14px;
+  font-size: 16px;
   color: white;
   flex-shrink: 0;
+  box-shadow: var(--shadow-glow);
+  text-shadow: 0 2px 4px rgba(0,0,0,0.3);
+  border: 1px solid rgba(255, 255, 255, 0.2);
 }
 
 .sidebar-logo-text {
