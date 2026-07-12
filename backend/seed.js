@@ -44,12 +44,31 @@ async function runSeed() {
     await query(`
       INSERT INTO assets (org_id, category_id, dept_id, tag, name, serial_number, status, condition, health_score, purchase_cost)
       VALUES 
-      ($1, $2, $4, 'AST-001', 'MacBook Pro 16"', 'SN-MBP-001', 'available', 'good', 95, 2400),
+      ($1, $2, $4, 'AST-001', 'MacBook Pro 16"', 'SN-MBP-001', 'allocated', 'good', 95, 2400),
       ($1, $2, $4, 'AST-002', 'Dell XPS 15', 'SN-DXPS-002', 'available', 'excellent', 100, 1800),
       ($1, $3, NULL, 'AST-003', 'Company Delivery Van', 'VIN-VAN-003', 'maintenance', 'fair', 65, 35000),
-      ($1, $2, $5, 'AST-004', 'ThinkPad T14', 'SN-TP-004', 'available', 'good', 85, 1200)
+      ($1, $2, $5, 'AST-004', 'ThinkPad T14', 'SN-TP-004', 'allocated', 'good', 85, 1200),
+      ($1, $2, $4, 'AST-005', 'MacBook Air M2', 'SN-MBA-005', 'available', 'excellent', 100, 1500),
+      ($1, $3, NULL, 'AST-006', 'Executive Sedan', 'VIN-SED-006', 'available', 'excellent', 98, 45000)
     `, [orgId, catLaptopsId, catVehiclesId, itDeptId, hrDeptId]);
-    console.log('✅ Demo Assets created');
+
+    // 6. Add Mock Allocations
+    await query(`
+      INSERT INTO allocations (asset_id, employee_id, status, notes)
+      VALUES 
+      ((SELECT id FROM assets WHERE tag='AST-001'), (SELECT id FROM employees WHERE email='admin@demo.com'), 'active', 'Assigned for IT development'),
+      ((SELECT id FROM assets WHERE tag='AST-004'), (SELECT id FROM employees WHERE email='employee@demo.com'), 'active', 'Assigned for HR duties')
+    `);
+
+    // 7. Add Mock Maintenance Requests
+    await query(`
+      INSERT INTO maintenance_requests (asset_id, raised_by, title, description, priority, status)
+      VALUES 
+      ((SELECT id FROM assets WHERE tag='AST-003'), (SELECT id FROM employees WHERE email='manager@demo.com'), 'Engine Oil Leak', 'Engine oil leak and strange noise from transmission', 'high', 'in_progress'),
+      ((SELECT id FROM assets WHERE tag='AST-001'), (SELECT id FROM employees WHERE email='admin@demo.com'), 'Battery Drain', 'Battery draining too quickly', 'medium', 'pending')
+    `);
+
+    console.log('✅ Comprehensive Mock Data (Assets, Allocations, Maintenance) created');
 
     console.log('🎉 Seeding completed successfully!');
     process.exit(0);

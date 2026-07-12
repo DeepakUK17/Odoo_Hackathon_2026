@@ -10,7 +10,7 @@ export const useSocket = (user, onNotification) => {
     if (!user || initialized.current) return;
     initialized.current = true;
 
-    socket = io(window.location.origin, {
+    socket = io('http://localhost:5000', {
       transports: ['websocket', 'polling'],
       withCredentials: true,
     });
