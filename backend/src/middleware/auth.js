@@ -39,8 +39,8 @@ const requireAdmin = (req, res, next) => {
 };
 
 const requireManager = (req, res, next) => {
-  if (!['admin', 'manager'].includes(req.user.role)) {
-    return res.status(403).json({ error: 'Manager or Admin access required' });
+  if (!['admin', 'asset_manager', 'dept_head'].includes(req.user.role)) {
+    return res.status(403).json({ error: 'Management access required' });
   }
   next();
 };

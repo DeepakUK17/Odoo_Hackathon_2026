@@ -128,8 +128,9 @@ export default function OrgSetupPage() {
               <div className="form-group">
                 <label className="form-label">Role</label>
                 <select className="input" value={form.role || 'employee'} onChange={e => setForm({...form, role: e.target.value})}>
+                  <option value="asset_manager">Asset Manager</option>
+                  <option value="dept_head">Department Head</option>
                   <option value="employee">Employee</option>
-                  <option value="manager">Manager</option>
                   {user?.role === 'admin' && <option value="admin">Admin</option>}
                 </select>
               </div>

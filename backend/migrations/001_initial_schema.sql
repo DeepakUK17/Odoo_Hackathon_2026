@@ -37,7 +37,7 @@ CREATE TABLE IF NOT EXISTS employees (
   name VARCHAR(255) NOT NULL,
   email VARCHAR(255) UNIQUE NOT NULL,
   password_hash VARCHAR(255) NOT NULL,
-  role VARCHAR(20) DEFAULT 'employee' CHECK (role IN ('admin', 'manager', 'employee')),
+  role VARCHAR(20) DEFAULT 'employee' CHECK (role IN ('admin', 'asset_manager', 'dept_head', 'employee')),
   status VARCHAR(20) DEFAULT 'active' CHECK (status IN ('active', 'inactive')),
   avatar_url TEXT,
   phone VARCHAR(30),

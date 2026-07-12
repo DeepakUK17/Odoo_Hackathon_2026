@@ -75,8 +75,9 @@ export default function LoginPage() {
             </div>
             <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
               {[
-                { role: 'Business Owner (Admin)', email: 'admin@demo.com', pass: 'demo123' },
-                { role: 'IT Manager', email: 'manager@demo.com', pass: 'demo123' },
+                { role: 'Admin', email: 'admin@demo.com', pass: 'demo123' },
+                { role: 'Asset Manager', email: 'manager@demo.com', pass: 'demo123' },
+                { role: 'Department Head', email: 'head@demo.com', pass: 'demo123' },
                 { role: 'Employee', email: 'employee@demo.com', pass: 'demo123' }
               ].map(demo => (
                 <button

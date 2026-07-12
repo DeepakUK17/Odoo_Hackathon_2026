@@ -34,10 +34,11 @@ async function runSeed() {
       INSERT INTO employees (org_id, dept_id, name, email, password_hash, role)
       VALUES 
       ($1, $2, 'Alice Admin', 'admin@demo.com', $3, 'admin'),
-      ($1, $2, 'Mike Manager', 'manager@demo.com', $3, 'manager'),
+      ($1, $2, 'Mike Manager', 'manager@demo.com', $3, 'asset_manager'),
+      ($1, $2, 'David DeptHead', 'head@demo.com', $3, 'dept_head'),
       ($1, $4, 'Emma Employee', 'employee@demo.com', $3, 'employee')
     `, [orgId, itDeptId, passwordHash, hrDeptId]);
-    console.log('✅ Demo Users created (admin@demo.com, manager@demo.com, employee@demo.com)');
+    console.log('✅ Demo Users created (admin, asset_manager, dept_head, employee)');
 
     // 5. Create some Assets
     await query(`
