@@ -365,7 +365,7 @@ select.input option { background: var(--bg-card); }
 input[type="date"],
 input[type="time"],
 input[type="datetime-local"] {
-  color-scheme: dark;          /* Makes browser use white calendar/clock icons */
+  color-scheme: var(--accent-light);          /* Makes browser use white calendar/clock icons */
   color: var(--text-primary);
 }
 
