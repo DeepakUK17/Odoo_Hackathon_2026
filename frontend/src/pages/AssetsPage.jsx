@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
+import { toast } from 'react-hot-toast';
 import api from '../services/api';
 import DataTable from '../components/DataTable';
 import StatusBadge from '../components/StatusBadge';
@@ -16,6 +17,7 @@ export default function AssetsPage() {
   const [filterStatus, setFilterStatus] = useState('');
   
   const [isModalOpen, setIsModalOpen] = useState(false);
+  const [formSubmitting, setFormSubmitting] = useState(false);
   const [form, setForm] = useState({});
   const { user } = useAuth();
   const navigate = useNavigate();
@@ -33,6 +35,7 @@ export default function AssetsPage() {
       setDepartments(depRes.data);
     } catch (err) {
       console.error(err);
+      toast.error('Failed to load assets data');
     } finally {
       setLoading(false);
     }
@@ -42,12 +45,15 @@ export default function AssetsPage() {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
+    setFormSubmitting(true);
     try {
       await api.post('/assets', form);
       setIsModalOpen(false);
       setForm({});
+      toast.success('Asset registered successfully!');
       loadData();
-    } catch (err) { alert(err.error || 'Failed to add asset'); }
+    } catch (err) { toast.error(err.error || 'Failed to add asset'); }
+    finally { setFormSubmitting(false); }
   };
 
   const columns = [
@@ -56,7 +62,16 @@ export default function AssetsPage() {
     { key: 'category_name', label: 'Category' },
     { key: 'status', label: 'Status', render: r => <StatusBadge status={r.status} /> },
     { key: 'health_score', label: 'Health', render: r => <HealthBadge score={r.health_score} /> },
-    { key: 'current_holder_name', label: 'Holder', render: r => r.current_holder_name || '-' }
+    { key: 'current_holder_name', label: 'Holder', render: r => r.current_holder_name || '-' },
+    { key: 'next_audit_date', label: 'Next Audit', render: r => {
+      if (!r.next_audit_date) return '-';
+      const days = Math.ceil((new Date(r.next_audit_date) - new Date()) / (1000 * 60 * 60 * 24));
+      return (
+        <span style={{ color: days < 0 ? 'var(--accent-red)' : days <= 3 ? 'var(--accent-orange)' : 'inherit' }}>
+          {days > 0 ? `In ${days} days` : days === 0 ? 'Today' : `${Math.abs(days)} days overdue`}
+        </span>
+      );
+    }}
   ];
 
   return (
@@ -135,7 +150,9 @@ export default function AssetsPage() {
           </div>
           <div style={{ gridColumn: 'span 2', display: 'flex', justifyContent: 'flex-end', gap: 10, marginTop: 10 }}>
             <button type="button" className="btn btn-secondary" onClick={() => setIsModalOpen(false)}>Cancel</button>
-            <button type="submit" className="btn btn-primary">Register Asset</button>
+            <button type="submit" className="btn btn-primary" disabled={formSubmitting}>
+              {formSubmitting ? 'Registering...' : 'Register Asset'}
+            </button>
           </div>
         </form>
       </Modal>

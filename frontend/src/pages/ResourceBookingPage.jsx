@@ -1,4 +1,5 @@
 import { useState, useEffect } from 'react';
+import { toast } from 'react-hot-toast';
 import api from '../services/api';
 import DataTable from '../components/DataTable';
 import StatusBadge from '../components/StatusBadge';
@@ -10,6 +11,7 @@ export default function ResourceBookingPage() {
   const [loading, setLoading] = useState(true);
   
   const [isModalOpen, setIsModalOpen] = useState(false);
+  const [formSubmitting, setFormSubmitting] = useState(false);
   const [form, setForm] = useState({});
 
   const loadData = async () => {
@@ -19,6 +21,7 @@ export default function ResourceBookingPage() {
       setBookings(res.data);
     } catch (err) {
       console.error(err);
+      toast.error('Failed to load bookings');
     } finally {
       setLoading(false);
     }
@@ -32,16 +35,19 @@ export default function ResourceBookingPage() {
       setResources(res.data);
       setForm({});
       setIsModalOpen(true);
-    } catch (err) { alert('Failed to load resources'); }
+    } catch (err) { toast.error('Failed to load resources'); }
   };
 
   const handleSubmit = async (e) => {
     e.preventDefault();
+    setFormSubmitting(true);
     try {
       await api.post('/bookings', form);
       setIsModalOpen(false);
+      toast.success('Resource booked successfully!');
       loadData();
-    } catch (err) { alert(err.error || 'Failed to book resource'); }
+    } catch (err) { toast.error(err.error || 'Failed to book resource'); }
+    finally { setFormSubmitting(false); }
   };
 
   const columns = [
@@ -92,7 +98,9 @@ export default function ResourceBookingPage() {
           </div>
           <div style={{ display: 'flex', justifyContent: 'flex-end', gap: 10, marginTop: 10 }}>
             <button type="button" className="btn btn-secondary" onClick={() => setIsModalOpen(false)}>Cancel</button>
-            <button type="submit" className="btn btn-primary">Confirm Booking</button>
+            <button type="submit" className="btn btn-primary" disabled={formSubmitting}>
+              {formSubmitting ? 'Confirming...' : 'Confirm Booking'}
+            </button>
           </div>
         </form>
       </Modal>

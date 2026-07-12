@@ -66,7 +66,19 @@ router.patch('/:id/items/:itemId', authenticate, async (req, res) => {
        WHERE id = $5 AND audit_id = $6 RETURNING *`,
       [verification_status, actual_location, notes, req.user.id, req.params.itemId, req.params.id]
     );
-    res.json(result.rows[0]);
+
+    const item = result.rows[0];
+
+    if (verification_status === 'damaged' || verification_status === 'missing') {
+      // Auto-generate maintenance request
+      await query(
+        `INSERT INTO maintenance_requests (org_id, asset_id, title, description, priority, reported_by)
+         VALUES ($1,$2,$3,$4,$5,$6)`,
+        [req.user.org_id, item.asset_id, `Audit Failure: ${verification_status.toUpperCase()}`, `Auto-generated maintenance due to audit failure. Notes: ${notes || 'None'}`, 'high', req.user.id]
+      );
+    }
+
+    res.json(item);
   } catch (err) { res.status(500).json({ error: err.message }); }
 });
 

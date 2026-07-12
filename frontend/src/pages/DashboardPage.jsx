@@ -45,7 +45,11 @@ export default function DashboardPage() {
           <h1 className="page-title">Dashboard</h1>
           <p className="page-subtitle">Overview of your enterprise assets</p>
         </div>
-        <Link to="/ai-assistant" className="btn btn-primary">✦ Ask AI Assistant</Link>
+        <div className="page-actions" style={{ display: 'flex', gap: '10px' }}>
+          <Link to="/allocation" className="btn btn-secondary">Swap Asset</Link>
+          <Link to="/maintenance" className="btn btn-secondary">Report Issue</Link>
+          <Link to="/ai-assistant" className="btn btn-primary">✦ Ask AI Assistant</Link>
+        </div>
       </div>
 
       <div className="kpi-grid">
@@ -53,6 +57,8 @@ export default function DashboardPage() {
         <KPICard title="Available" value={assets.available} icon="✓" color="green" />
         <KPICard title="In Maintenance" value={assets.in_maintenance} icon="🔧" color="orange" />
         <KPICard title="Avg Health Score" value={`${Math.round(assets.avg_health || 0)}%`} icon="❤️" color={assets.avg_health > 70 ? 'green' : 'red'} />
+        <KPICard title="Overdue Returns" value={overdueCount} icon="⚠️" color={overdueCount > 0 ? 'red' : 'green'} />
+        <KPICard title="Pending Transfers" value={pendingTransfers} icon="🔄" color="blue" />
       </div>
 
       <div className="grid-3 mb-6">

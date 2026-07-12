@@ -1,4 +1,5 @@
 import { useState, useEffect } from 'react';
+import { toast } from 'react-hot-toast';
 import api from '../services/api';
 import KanbanBoard from '../components/KanbanBoard';
 import Modal from '../components/Modal';
@@ -17,6 +18,8 @@ export default function MaintenancePage() {
   const [assets, setAssets] = useState([]);
   const [employees, setEmployees] = useState([]);
 
+  const [formSubmitting, setFormSubmitting] = useState(false);
+
   useSocket(user, (notif) => {
     if (notif.entity_type === 'maintenance') loadData(false);
   });
@@ -25,20 +28,20 @@ export default function MaintenancePage() {
     if (showLoader) setLoading(true);
     try {
       const res = await api.get('/maintenance');
-      setRequests(res.data);
+      // Role-based filtering: Employee only sees tasks assigned to them
+      const filtered = user?.role === 'employee' 
+        ? res.data.filter(r => r.assigned_to === user.id)
+        : res.data;
+      setRequests(filtered);
     } catch (err) {
       console.error(err);
+      toast.error('Failed to load maintenance requests');
     } finally {
       setLoading(false);
     }
   };
 
   useEffect(() => { loadData(); }, []);
-
-  const showError = (msg) => {
-    setError(msg);
-    setTimeout(() => setError(null), 5000);
-  };
 
   const openModal = async (item = null) => {
     try {
@@ -50,10 +53,23 @@ export default function MaintenancePage() {
       setEmployees(empRes.data);
       setForm(item ? { ...item } : { priority: 'medium' });
       setIsModalOpen(true);
-    } catch (err) { showError('Failed to load data for maintenance modal'); }
+    } catch (err) { toast.error('Failed to load data for maintenance modal'); }
   };
 
   const handleStatusChange = async (item, newStatus) => {
+    // Kanban constraint rules
+    const invalidMoves = ['pending', 'approved', 'assigned'];
+    if ((item.status === 'in_progress' || item.status === 'resolved') && invalidMoves.includes(newStatus)) {
+      toast.error('Cannot move a task backwards to this state once started.');
+      return;
+    }
+    
+    // Employee column constraint
+    if (user?.role === 'employee' && newStatus !== 'in_progress' && newStatus !== 'resolved') {
+      toast.error('Employees can only move tasks to In Progress or Resolved.');
+      return;
+    }
+
     // Optimistic UI Update for instant feedback
     const originalRequests = [...requests];
     setRequests(requests.map(r => r.id === item.id ? { ...r, status: newStatus } : r));
@@ -63,13 +79,14 @@ export default function MaintenancePage() {
       // Background sync to ensure accuracy
       loadData(false);
     } catch (err) {
-      showError(err.error || 'Failed to update status');
+      toast.error(err.error || 'Failed to update status');
       setRequests(originalRequests); // Revert on failure
     }
   };
 
   const handleSubmit = async (e) => {
     e.preventDefault();
+    setFormSubmitting(true);
     try {
       if (form.id) {
         await api.patch(`/maintenance/${form.id}`, form);
@@ -77,8 +94,10 @@ export default function MaintenancePage() {
         await api.post('/maintenance', form);
       }
       setIsModalOpen(false);
+      toast.success('Maintenance request saved successfully!');
       loadData();
-    } catch (err) { showError(err.error || 'Failed to save request'); }
+    } catch (err) { toast.error(err.error || 'Failed to save request'); }
+    finally { setFormSubmitting(false); }
   };
 
   return (
@@ -161,7 +180,9 @@ export default function MaintenancePage() {
 
           <div style={{ display: 'flex', justifyContent: 'flex-end', gap: 10, marginTop: 10 }}>
             <button type="button" className="btn btn-secondary" onClick={() => setIsModalOpen(false)}>Cancel</button>
-            <button type="submit" className="btn btn-primary">Save Request</button>
+            <button type="submit" className="btn btn-primary" disabled={formSubmitting}>
+              {formSubmitting ? 'Saving...' : 'Save Request'}
+            </button>
           </div>
         </form>
       </Modal>

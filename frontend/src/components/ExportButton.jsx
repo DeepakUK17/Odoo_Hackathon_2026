@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import { toast } from 'react-hot-toast';
 import api from '../services/api';
 
 export default function ExportButton({ module, filename = 'Export', label = 'Export Excel' }) {
@@ -18,7 +19,7 @@ export default function ExportButton({ module, filename = 'Export', label = 'Exp
       link.remove();
     } catch (err) {
       console.error('Export failed', err);
-      alert('Failed to export data');
+      toast.error('Failed to export data');
     } finally {
       setExporting(false);
     }

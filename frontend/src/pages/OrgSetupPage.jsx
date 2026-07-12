@@ -1,4 +1,5 @@
 import { useState, useEffect } from 'react';
+import { toast } from 'react-hot-toast';
 import api from '../services/api';
 import DataTable from '../components/DataTable';
 import Modal from '../components/Modal';
@@ -13,6 +14,7 @@ export default function OrgSetupPage() {
   const { user } = useAuth();
   
   const [isModalOpen, setIsModalOpen] = useState(false);
+  const [formSubmitting, setFormSubmitting] = useState(false);
   const [form, setForm] = useState({});
 
   const loadData = async () => {
@@ -22,6 +24,7 @@ export default function OrgSetupPage() {
       setData(res.data);
     } catch (err) {
       console.error(err);
+      toast.error(`Failed to load ${tab}`);
     } finally {
       setLoading(false);
     }
@@ -31,13 +34,17 @@ export default function OrgSetupPage() {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
+    setFormSubmitting(true);
     try {
       if (form.id) await api.patch(`/${tab}/${form.id}`, form);
       else await api.post(`/${tab}`, form);
       setIsModalOpen(false);
+      toast.success(`${tab.slice(0, -1)} saved successfully!`);
       loadData();
     } catch (err) {
-      alert(err.error || 'Failed to save');
+      toast.error(err.error || 'Failed to save');
+    } finally {
+      setFormSubmitting(false);
     }
   };
 
@@ -71,7 +78,7 @@ export default function OrgSetupPage() {
           <p className="page-subtitle">Manage employees, departments, and categories</p>
         </div>
         <div className="page-actions">
-          {tab === 'employees' && <ExportButton module="employees" filename="Employees" />}
+          {tab === 'employees' && <ExportButton module="employees" filename="Employees" label="Export Org Data" />}
           {user?.role !== 'employee' && (
             <button className="btn btn-primary" onClick={() => { setForm({}); setIsModalOpen(true); }}>
               + Add {tab === 'employees' ? 'Employee' : tab === 'departments' ? 'Department' : 'Category'}
@@ -127,7 +134,7 @@ export default function OrgSetupPage() {
               )}
               <div className="form-group">
                 <label className="form-label">Role</label>
-                <select className="input" value={form.role || 'employee'} onChange={e => setForm({...form, role: e.target.value})}>
+                <select className="input" value={form.role || 'employee'} onChange={e => setForm({...form, role: e.target.value})} disabled={form.id && form.role === 'admin'}>
                   <option value="asset_manager">Asset Manager</option>
                   <option value="dept_head">Department Head</option>
                   <option value="employee">Employee</option>
@@ -152,7 +159,9 @@ export default function OrgSetupPage() {
 
           <div style={{ display: 'flex', justifyContent: 'flex-end', gap: 10, marginTop: 10 }}>
             <button type="button" className="btn btn-secondary" onClick={() => setIsModalOpen(false)}>Cancel</button>
-            <button type="submit" className="btn btn-primary">Save</button>
+            <button type="submit" className="btn btn-primary" disabled={formSubmitting}>
+              {formSubmitting ? 'Saving...' : 'Save'}
+            </button>
           </div>
         </form>
       </Modal>

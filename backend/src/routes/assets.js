@@ -13,7 +13,15 @@ router.get('/', authenticate, async (req, res) => {
       SELECT a.*, ac.name as category_name, ac.color as category_color,
              d.name as dept_name,
              alloc.employee_id as current_holder_id,
-             e.name as current_holder_name
+             e.name as current_holder_name,
+             (
+               SELECT au.start_date 
+               FROM audit_items ai 
+               JOIN audits au ON ai.audit_id = au.id 
+               WHERE ai.asset_id = a.id AND au.status = 'active' AND au.start_date >= CURRENT_DATE
+               ORDER BY au.start_date ASC 
+               LIMIT 1
+             ) as next_audit_date
       FROM assets a
       LEFT JOIN asset_categories ac ON a.category_id = ac.id
       LEFT JOIN departments d ON a.dept_id = d.id
@@ -100,6 +108,18 @@ router.get('/:id/timeline', authenticate, async (req, res) => {
       if (m.resolved_at) events.push({ event: 'maintenance_resolved', description: `Maintenance resolved${m.technician_name ? ` by ${m.technician_name}` : ''}`, date: m.resolved_at, icon: 'check-circle' });
     });
 
+    // Audits
+    const audits = await query(
+      `SELECT ai.*, au.name as audit_name, e.name as verified_by_name
+       FROM audit_items ai
+       JOIN audits au ON ai.audit_id = au.id
+       LEFT JOIN employees e ON ai.verified_by = e.id
+       WHERE ai.asset_id = $1 AND ai.verified_at IS NOT NULL`, [assetId]
+    );
+    audits.rows.forEach(a => {
+      events.push({ event: 'audited', description: `Audited during "${a.audit_name}" — Status: ${a.verification_status}${a.verified_by_name ? ` by ${a.verified_by_name}` : ''}`, date: a.verified_at, icon: 'shield' });
+    });
+
     events.sort((a, b) => new Date(a.date) - new Date(b.date));
     res.json(events);
   } catch (err) { res.status(500).json({ error: err.message }); }
@@ -158,6 +178,16 @@ router.post('/', authenticate, requireManager, async (req, res) => {
     const health = await computeHealthScore(asset, []);
     await query('UPDATE assets SET health_score = $1 WHERE id = $2', [health.score, asset.id]);
     asset.health_score = health.score;
+
+    // Auto-schedule audit (+15 days)
+    const auditDate = new Date();
+    auditDate.setDate(auditDate.getDate() + 15);
+    const auditRes = await query(
+      `INSERT INTO audits (org_id, dept_id, name, start_date, end_date, description, created_by)
+       VALUES ($1,$2,$3,$4,$5,$6,$7) RETURNING id`,
+      [req.user.org_id, dept_id, `Initial Audit: ${tag}`, auditDate.toISOString().split('T')[0], auditDate.toISOString().split('T')[0], 'Auto-scheduled audit for new asset', req.user.id]
+    );
+    await query('INSERT INTO audit_items (audit_id, asset_id, expected_location) VALUES ($1,$2,$3)', [auditRes.rows[0].id, asset.id, location]);
 
     await logActivity(req.user, 'asset.registered', 'asset', asset.id, `Registered asset ${tag} - ${name}`);
 

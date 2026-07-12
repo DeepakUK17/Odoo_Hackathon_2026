@@ -1,4 +1,5 @@
 import { useState, useEffect } from 'react';
+import { toast } from 'react-hot-toast';
 import api from '../services/api';
 import { useAuth } from '../store/AuthContext';
 import { useSocket } from '../hooks/useSocket';
@@ -23,7 +24,7 @@ export default function NotificationsPage() {
     try {
       await api.patch('/notifications/read-all');
       setNotifications(prev => prev.map(n => ({ ...n, is_read: true })));
-    } catch (err) { alert('Failed to mark as read'); }
+    } catch (err) { toast.error('Failed to mark as read'); }
   };
 
   const getIcon = (type) => {

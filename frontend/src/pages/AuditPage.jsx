@@ -1,4 +1,5 @@
 import { useState, useEffect } from 'react';
+import { toast } from 'react-hot-toast';
 import api from '../services/api';
 import DataTable from '../components/DataTable';
 import StatusBadge from '../components/StatusBadge';
@@ -13,6 +14,7 @@ export default function AuditPage() {
   const { user } = useAuth();
   
   const [isModalOpen, setIsModalOpen] = useState(false);
+  const [formSubmitting, setFormSubmitting] = useState(false);
   const [form, setForm] = useState({});
 
   const loadData = async () => {
@@ -22,11 +24,12 @@ export default function AuditPage() {
         const res = await api.get('/audits');
         setAudits(res.data);
       } else {
-        const res = await api.get('/audits/logs');
+        const res = await api.get('/activity-logs');
         setLogs(res.data);
       }
     } catch (err) {
       console.error(err);
+      toast.error('Failed to load data');
     } finally {
       setLoading(false);
     }
@@ -36,11 +39,14 @@ export default function AuditPage() {
 
   const handleCreateAudit = async (e) => {
     e.preventDefault();
+    setFormSubmitting(true);
     try {
       await api.post('/audits', form);
       setIsModalOpen(false);
+      toast.success('Audit scheduled successfully!');
       loadData();
-    } catch (err) { alert(err.error || 'Failed to schedule audit'); }
+    } catch (err) { toast.error(err.error || 'Failed to schedule audit'); }
+    finally { setFormSubmitting(false); }
   };
 
   const columnsAudits = [
@@ -100,7 +106,9 @@ export default function AuditPage() {
           </div>
           <div style={{ display: 'flex', justifyContent: 'flex-end', gap: 10, marginTop: 10 }}>
             <button type="button" className="btn btn-secondary" onClick={() => setIsModalOpen(false)}>Cancel</button>
-            <button type="submit" className="btn btn-primary">Schedule Audit</button>
+            <button type="submit" className="btn btn-primary" disabled={formSubmitting}>
+              {formSubmitting ? 'Scheduling...' : 'Schedule'}
+            </button>
           </div>
         </form>
       </Modal>
