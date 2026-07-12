@@ -72,8 +72,8 @@ export default function AppShell() {
       {/* Sidebar */}
       <aside className={`sidebar${collapsed ? ' collapsed' : ''}`}>
         <div className="sidebar-logo">
-          <div className="sidebar-logo-icon">AF</div>
-          {!collapsed && <span className="sidebar-logo-text">AssetFlow</span>}
+          <img src="/logo.png" alt="AF" className="sidebar-logo-icon" style={{ background: 'transparent', border: 'none', boxShadow: 'none' }} />
+          {!collapsed && <div className="sidebar-logo-text">AssetFlow</div>}
         </div>
         <nav className="sidebar-nav">
           {SECTIONS.map(section => {

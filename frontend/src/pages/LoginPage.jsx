@@ -32,9 +32,7 @@ export default function LoginPage() {
     <div style={{ minHeight: '100vh', display: 'flex', alignItems: 'center', justifyContent: 'center', background: 'var(--bg-primary)' }}>
       <div className="card-glass animate-slideUp" style={{ width: '100%', maxWidth: 420, padding: 40 }}>
         <div style={{ textAlign: 'center', marginBottom: 30 }}>
-          <div style={{ width: 48, height: 48, background: 'linear-gradient(135deg, var(--accent), var(--accent-green))', borderRadius: 12, margin: '0 auto 16px', display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'white', fontWeight: 800, fontSize: 20 }}>
-            AF
-          </div>
+          <img src="/logo.png" alt="AssetFlow Logo" style={{ width: 48, height: 48, objectFit: 'contain', margin: '0 auto 16px', display: 'block', borderRadius: 12, boxShadow: 'var(--shadow-glow)' }} />
           <h1 style={{ fontSize: '1.5rem', fontWeight: 700 }}>AssetFlow</h1>
           <p style={{ color: 'var(--text-muted)', fontSize: '0.875rem' }}>Enterprise Asset Intelligence</p>
         </div>
