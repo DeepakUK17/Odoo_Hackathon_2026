@@ -15,6 +15,10 @@ const io = new Server(server, {
     methods: ['GET', 'POST'],
     credentials: true,
   },
+  transports: ['websocket'],   // Skip polling fallback - faster connection
+  pingTimeout: 20000,          // Detect dead connections faster
+  pingInterval: 25000,
+  connectTimeout: 5000,
 });
 
 // Make io accessible in routes
@@ -99,6 +103,14 @@ server.listen(PORT, async () => {
 
   // Start background scheduler (check every 10 min for alerts)
   startScheduler(io);
+
+  // Keep Neon DB awake - ping every 4 minutes to prevent serverless cold starts
+  setInterval(async () => {
+    try {
+      const { pool } = require('./src/config/db');
+      await pool.query('SELECT 1');
+    } catch (e) { /* silent - don't crash server */ }
+  }, 4 * 60 * 1000);
 });
 
 module.exports = { app, server, io };

@@ -17,7 +17,7 @@ router.post('/register', async (req, res) => {
       return res.status(409).json({ error: 'Email already registered' });
     }
 
-    const passwordHash = await bcrypt.hash(password, 12);
+    const passwordHash = await bcrypt.hash(password, 10); // 10 rounds = secure + fast (~250ms vs ~1s at 12)
 
     // Create org if orgName provided (first user becomes admin)
     let orgId;
@@ -42,7 +42,7 @@ router.post('/register', async (req, res) => {
 
     const user = empResult.rows[0];
     const token = jwt.sign(
-      { userId: user.id, orgId: user.org_id, role: user.role },
+      { userId: user.id, orgId: user.org_id, role: user.role, name: user.name },
       process.env.JWT_SECRET,
       { expiresIn: process.env.JWT_EXPIRES_IN || '7d' }
     );
@@ -77,7 +77,7 @@ router.post('/login', async (req, res) => {
     if (!valid) return res.status(401).json({ error: 'Invalid email or password' });
 
     const token = jwt.sign(
-      { userId: user.id, orgId: user.org_id, role: user.role },
+      { userId: user.id, orgId: user.org_id, role: user.role, name: user.name },
       process.env.JWT_SECRET,
       { expiresIn: process.env.JWT_EXPIRES_IN || '7d' }
     );
@@ -89,11 +89,13 @@ router.post('/login', async (req, res) => {
   }
 });
 
-// GET /api/auth/me
+// GET /api/auth/me - returns user from JWT + minimal DB lookup
 router.get('/me', authenticate, async (req, res) => {
   try {
+    // req.user is already populated from JWT by authenticate middleware
+    // Only fetch extra profile data (dept_name, org_name) if needed
     const result = await query(
-      `SELECT e.id, e.name, e.email, e.role, e.org_id, e.dept_id, e.status, e.created_at,
+      `SELECT e.id, e.name, e.email, e.role, e.org_id, e.dept_id, e.status,
               d.name as dept_name, o.name as org_name
        FROM employees e
        LEFT JOIN departments d ON e.dept_id = d.id
@@ -101,6 +103,7 @@ router.get('/me', authenticate, async (req, res) => {
        WHERE e.id = $1`,
       [req.user.id]
     );
+    if (!result.rows[0]) return res.status(404).json({ error: 'User not found' });
     res.json(result.rows[0]);
   } catch (err) {
     res.status(500).json({ error: err.message });

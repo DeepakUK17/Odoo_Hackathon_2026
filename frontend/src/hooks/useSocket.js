@@ -11,8 +11,11 @@ export const useSocket = (user, onNotification) => {
     initialized.current = true;
 
     socket = io('http://localhost:5000', {
-      transports: ['websocket', 'polling'],
+      transports: ['websocket'],  // Match server - skip polling, direct websocket
       withCredentials: true,
+      reconnectionAttempts: 5,
+      reconnectionDelay: 1000,
+      timeout: 5000,
     });
 
     socket.on('connect', () => {

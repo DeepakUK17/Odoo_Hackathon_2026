@@ -7,7 +7,9 @@ const { generateReportSummary } = require('../services/aiEngine');
 router.get('/dashboard', authenticate, async (req, res) => {
   try {
     const orgId = req.user.org_id;
-    const [assetStats, maintenanceStats, bookingStats, recentActivity] = await Promise.all([
+
+    // Run ALL queries in parallel - was sequential before (major bottleneck)
+    const [assetStats, maintenanceStats, bookingStats, recentActivity, overdueQuery, pendingTransfers] = await Promise.all([
       query(`SELECT
         COUNT(*) as total,
         COUNT(*) FILTER (WHERE status = 'available') as available,
@@ -26,17 +28,11 @@ router.get('/dashboard', authenticate, async (req, res) => {
         FROM allocations al JOIN assets a ON al.asset_id = a.id JOIN employees e ON al.employee_id = e.id
         LEFT JOIN departments d ON al.dept_id = d.id WHERE a.org_id = $1 AND al.status = 'active'
         ORDER BY al.allocated_at DESC LIMIT 5`, [orgId]),
+      query(`SELECT COUNT(*) as count FROM allocations al JOIN assets a ON al.asset_id = a.id
+        WHERE a.org_id = $1 AND al.status = 'active' AND al.expected_return < NOW()`, [orgId]),
+      query(`SELECT COUNT(*) as count FROM transfer_requests tr JOIN assets a ON tr.asset_id = a.id
+        WHERE a.org_id = $1 AND tr.status = 'pending'`, [orgId]),
     ]);
-
-    const overdueQuery = await query(
-      `SELECT COUNT(*) as count FROM allocations al JOIN assets a ON al.asset_id = a.id
-       WHERE a.org_id = $1 AND al.status = 'active' AND al.expected_return < NOW()`, [orgId]
-    );
-
-    const pendingTransfers = await query(
-      `SELECT COUNT(*) as count FROM transfer_requests tr JOIN assets a ON tr.asset_id = a.id
-       WHERE a.org_id = $1 AND tr.status = 'pending'`, [orgId]
-    );
 
     res.json({
       assets: assetStats.rows[0],
