@@ -68,7 +68,52 @@ async function runSeed() {
       ((SELECT id FROM assets WHERE tag='AST-001'), (SELECT id FROM employees WHERE email='admin@demo.com'), 'Battery Drain', 'Battery draining too quickly', 'medium', 'pending')
     `);
 
-    console.log('✅ Comprehensive Mock Data (Assets, Allocations, Maintenance) created');
+    // 8. Add Mock Resources and Bookings
+    const resRes = await query(`
+      INSERT INTO resources (org_id, name, type, location, capacity, status)
+      VALUES 
+      ($1, 'Conference Room A', 'room', 'Floor 1', 10, 'available'),
+      ($1, 'Company Car - Prius', 'vehicle', 'Basement Parking', 5, 'available'),
+      ($1, '4K Projector', 'equipment', 'IT Storage', NULL, 'available')
+      RETURNING id, name
+    `, [orgId]);
+    const roomA = resRes.rows[0].id;
+    const carPrius = resRes.rows[1].id;
+
+    await query(`
+      INSERT INTO bookings (resource_id, employee_id, title, start_time, end_time, attendees, status)
+      VALUES 
+      ($1, (SELECT id FROM employees WHERE email='manager@demo.com'), 'Quarterly Planning', NOW() + INTERVAL '1 day', NOW() + INTERVAL '1 day 2 hours', 8, 'confirmed'),
+      ($2, (SELECT id FROM employees WHERE email='admin@demo.com'), 'Client Visit', NOW() + INTERVAL '2 days', NOW() + INTERVAL '2 days 4 hours', 3, 'confirmed')
+    `, [roomA, carPrius]);
+
+    // 9. Add Mock Audits and Audit Items
+    const auditRes = await query(`
+      INSERT INTO audits (org_id, dept_id, name, description, start_date, end_date, status, created_by)
+      VALUES 
+      ($1, $2, 'Q3 IT Asset Audit', 'Quarterly inventory check of all IT equipment', CURRENT_DATE, CURRENT_DATE + 7, 'active', (SELECT id FROM employees WHERE email='admin@demo.com'))
+      RETURNING id
+    `, [orgId, itDeptId]);
+    const auditId = auditRes.rows[0].id;
+
+    await query(`
+      INSERT INTO audit_items (audit_id, asset_id, expected_location, verification_status, notes)
+      VALUES 
+      ($1, (SELECT id FROM assets WHERE tag='AST-001'), 'IT Dept', 'verified', 'Asset found and in good condition'),
+      ($1, (SELECT id FROM assets WHERE tag='AST-002'), 'IT Dept', 'pending', NULL),
+      ($1, (SELECT id FROM assets WHERE tag='AST-004'), 'HR Dept', 'missing', 'Could not locate at the assigned desk')
+    `, [auditId]);
+
+    // 10. Add Mock Notifications
+    await query(`
+      INSERT INTO notifications (recipient_id, type, priority, title, message, is_read)
+      VALUES 
+      ((SELECT id FROM employees WHERE email='admin@demo.com'), 'maintenance', 'high', 'Maintenance Requested', 'Manager raised a high priority maintenance request for Company Delivery Van.', false),
+      ((SELECT id FROM employees WHERE email='admin@demo.com'), 'audit', 'medium', 'Audit Started', 'Q3 IT Asset Audit has been initiated.', false),
+      ((SELECT id FROM employees WHERE email='manager@demo.com'), 'booking', 'low', 'Booking Confirmed', 'Your booking for Conference Room A is confirmed.', true)
+    `);
+
+    console.log('✅ Comprehensive Mock Data (Assets, Allocations, Maintenance, Bookings, Audits, Notifications) created');
 
     console.log('🎉 Seeding completed successfully!');
     process.exit(0);
