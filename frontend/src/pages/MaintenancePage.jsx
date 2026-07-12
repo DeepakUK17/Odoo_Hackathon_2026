@@ -9,6 +9,7 @@ import { useSocket } from '../hooks/useSocket';
 export default function MaintenancePage() {
   const [requests, setRequests] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
   const { user } = useAuth();
   
   const [isModalOpen, setIsModalOpen] = useState(false);
@@ -34,6 +35,11 @@ export default function MaintenancePage() {
 
   useEffect(() => { loadData(); }, []);
 
+  const showError = (msg) => {
+    setError(msg);
+    setTimeout(() => setError(null), 5000);
+  };
+
   const openModal = async (item = null) => {
     try {
       const [assRes, empRes] = await Promise.all([
@@ -44,7 +50,7 @@ export default function MaintenancePage() {
       setEmployees(empRes.data);
       setForm(item ? { ...item } : { priority: 'medium' });
       setIsModalOpen(true);
-    } catch (err) { alert('Failed to load data for maintenance modal'); }
+    } catch (err) { showError('Failed to load data for maintenance modal'); }
   };
 
   const handleStatusChange = async (item, newStatus) => {
@@ -52,7 +58,7 @@ export default function MaintenancePage() {
       await api.patch(`/maintenance/${item.id}`, { status: newStatus });
       loadData(false); // Refresh without full loading spinner
     } catch (err) {
-      alert(err.error || 'Failed to update status');
+      showError(err.error || 'Failed to update status');
       loadData(false); // Reset board
     }
   };
@@ -67,11 +73,16 @@ export default function MaintenancePage() {
       }
       setIsModalOpen(false);
       loadData();
-    } catch (err) { alert(err.error || 'Failed to save request'); }
+    } catch (err) { showError(err.error || 'Failed to save request'); }
   };
 
   return (
     <div>
+      {error && (
+        <div style={{ padding: '12px 16px', background: 'var(--accent-red)', color: 'white', borderRadius: 'var(--radius)', marginBottom: 16, fontWeight: 500 }}>
+          ⚠️ {error}
+        </div>
+      )}
       <div className="page-header">
         <div>
           <h1 className="page-title">Maintenance Board</h1>

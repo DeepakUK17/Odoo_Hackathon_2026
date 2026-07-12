@@ -44,29 +44,34 @@ router.post('/', authenticate, async (req, res) => {
   } catch (err) { res.status(500).json({ error: err.message }); }
 });
 
-router.patch('/:id/status', authenticate, requireManager, async (req, res) => {
-  const { status, assigned_to, estimated_cost, actual_cost, resolution_notes } = req.body;
-  if (!VALID_STATUSES.includes(status)) return res.status(400).json({ error: `Invalid status. Use: ${VALID_STATUSES.join(', ')}` });
+router.patch('/:id', authenticate, requireManager, async (req, res) => {
+  const { title, description, priority, status, assigned_to, estimated_cost, actual_cost, resolution_notes } = req.body;
   try {
-    const updateFields = {
-      status,
-      assigned_to: assigned_to || null,
-      estimated_cost: estimated_cost || null,
-      actual_cost: actual_cost || null,
-      resolution_notes: resolution_notes || null,
-      resolved_at: status === 'resolved' ? 'NOW()' : null,
-    };
+    // If status is provided, validate it
+    if (status && !VALID_STATUSES.includes(status)) {
+      return res.status(400).json({ error: `Invalid status. Use: ${VALID_STATUSES.join(', ')}` });
+    }
 
     const result = await query(
-      `UPDATE maintenance_requests SET
-         status = $1, assigned_to = COALESCE($2, assigned_to),
-         estimated_cost = COALESCE($3, estimated_cost),
-         actual_cost = COALESCE($4, actual_cost),
-         resolution_notes = COALESCE($5, resolution_notes),
-         resolved_at = CASE WHEN $1 = 'resolved' THEN NOW() ELSE resolved_at END
-       WHERE id = $6 RETURNING *`,
-      [status, assigned_to, estimated_cost, actual_cost, resolution_notes, req.params.id]
+      `UPDATE maintenance_requests SET 
+        title = COALESCE($1, title),
+        description = COALESCE($2, description),
+        priority = COALESCE($3, priority),
+        status = COALESCE($4, status),
+        assigned_to = COALESCE($5, assigned_to),
+        estimated_cost = COALESCE($6, estimated_cost),
+        actual_cost = COALESCE($7, actual_cost),
+        resolution_notes = COALESCE($8, resolution_notes),
+        resolved_at = CASE WHEN $4 = 'resolved' THEN NOW() ELSE resolved_at END,
+        updated_at = NOW()
+       WHERE id = $9 RETURNING *`,
+      [
+        title || null, description || null, priority || null,
+        status || null, assigned_to || null, estimated_cost || null,
+        actual_cost || null, resolution_notes || null, req.params.id
+      ]
     );
+
 
     if (!result.rows[0]) return res.status(404).json({ error: 'Maintenance request not found' });
 
