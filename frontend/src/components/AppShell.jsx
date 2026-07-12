@@ -186,15 +186,6 @@ export default function AppShell() {
                 }}>{unreadCount > 9 ? '9+' : unreadCount}</span>
               )}
             </button>
-            <div style={{
-              padding: '6px 14px',
-              background: 'linear-gradient(135deg, rgba(108,99,255,0.1), rgba(0,212,170,0.1))',
-              border: '1px solid rgba(108,99,255,0.2)',
-              borderRadius: 'var(--radius-pill)',
-              fontSize: '0.8rem', fontWeight: 600,
-            }}>
-              {user?.org_name || user?.name}
-            </div>
           </div>
         </header>
 

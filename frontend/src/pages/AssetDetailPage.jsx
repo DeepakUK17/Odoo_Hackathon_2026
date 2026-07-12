@@ -14,13 +14,16 @@ export default function AssetDetailPage() {
   const [isQrOpen, setIsQrOpen] = useState(false);
 
   useEffect(() => {
-    api.get(`/assets/${id}`)
-      .then(res => {
-        setAsset(res.data.asset);
-        setHistory(res.data.history);
-      })
-      .catch(console.error)
-      .finally(() => setLoading(false));
+    Promise.all([
+      api.get(`/assets/${id}`),
+      api.get(`/assets/${id}/timeline`)
+    ])
+    .then(([assetRes, timelineRes]) => {
+      setAsset(assetRes.data);
+      setHistory(timelineRes.data);
+    })
+    .catch(console.error)
+    .finally(() => setLoading(false));
   }, [id]);
 
   if (loading) return <div className="skeleton" style={{ height: 400 }} />;
