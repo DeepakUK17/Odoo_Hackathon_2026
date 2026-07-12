@@ -113,12 +113,9 @@ export default function AssetDetailPage() {
         <div className="card-header"><h3 className="card-title">Activity History</h3></div>
         <div className="card-body">
           <Timeline events={history.map(h => ({
-            date: h.created_at,
-            description: h.action === 'status_change' ? `Status changed to ${h.details.new_status}` :
-                         h.action === 'condition_update' ? `Condition updated to ${h.details.condition} (Health: ${h.details.health_score})` :
-                         h.action === 'allocated' ? `Allocated to employee #${h.details.employee_id}` :
-                         h.action === 'returned' ? `Returned in ${h.details.condition} condition` : h.action,
-            icon: h.action.includes('allocate') ? 'user-check' : h.action.includes('return') ? 'rotate-ccw' : 'check-circle'
+            date: h.date,
+            description: h.description,
+            icon: h.icon || 'check-circle'
           }))} />
         </div>
       </div>
