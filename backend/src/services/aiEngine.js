@@ -8,7 +8,7 @@ try {
   console.warn('⚠️ Gemini AI not initialized:', err.message);
 }
 
-const getModel = () => genAI?.getGenerativeModel({ model: 'gemini-1.5-flash' });
+const getModel = () => genAI?.getGenerativeModel({ model: 'gemini-2.5-flash' });
 
 /**
  * Fetch DB context based on detected intent keywords
@@ -107,6 +107,14 @@ const fallbackResponse = (contextData, userQuery) => {
   if (contextData.overdueAssets?.length > 0) {
     return `There are **${contextData.overdueAssets.length} overdue assets**:\n` +
       contextData.overdueAssets.map(a => `• ${a.tag} (${a.name}) — held by ${a.holder}, due ${new Date(a.expected_return).toLocaleDateString()}`).join('\n');
+  }
+  if (contextData.availableAssets?.length > 0) {
+    return `Here are some available assets:\n` +
+      contextData.availableAssets.map(a => `• ${a.tag} (${a.name}) — Health: ${a.health_score}`).join('\n');
+  }
+  if (contextData.maintenanceAssets?.length > 0) {
+    return `There are assets currently under maintenance:\n` +
+      contextData.maintenanceAssets.map(a => `• ${a.tag} (${a.name}) — ${a.title} (Priority: ${a.priority})`).join('\n');
   }
   return `Here's your asset summary: **${contextData.summary.total} total assets** — ${contextData.summary.available} available, ${contextData.summary.allocated} allocated, ${contextData.summary.in_maintenance} in maintenance.`;
 };
