@@ -112,4 +112,23 @@ router.get('/summary', authenticate, async (req, res) => {
   } catch (err) { res.status(500).json({ error: err.message }); }
 });
 
+// GET /api/reports/analytics
+router.get('/analytics', authenticate, async (req, res) => {
+  try {
+    const costQuery = await query(
+      `SELECT COALESCE(ac.name, 'Uncategorized') as category, SUM(a.purchase_cost) as total_cost 
+       FROM assets a LEFT JOIN asset_categories ac ON a.category_id = ac.id 
+       WHERE a.org_id = $1 GROUP BY ac.name`, [req.user.org_id]
+    );
+    const condQuery = await query(
+      `SELECT condition, COUNT(*) as count 
+       FROM assets WHERE org_id = $1 GROUP BY condition`, [req.user.org_id]
+    );
+    res.json({
+      costByCategory: costQuery.rows,
+      conditionBreakdown: condQuery.rows
+    });
+  } catch (err) { res.status(500).json({ error: err.message }); }
+});
+
 module.exports = router;

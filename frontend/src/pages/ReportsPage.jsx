@@ -11,7 +11,7 @@ export default function ReportsPage() {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    api.get('/reports/dashboard')
+    api.get('/reports/analytics')
       .then(res => setData(res.data))
       .catch(console.error)
       .finally(() => setLoading(false));

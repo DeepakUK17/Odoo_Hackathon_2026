@@ -14,7 +14,7 @@ export default function NotificationsPage() {
 
   useEffect(() => {
     api.get('/notifications')
-      .then(res => setNotifications(res.data))
+      .then(res => setNotifications(res.data.notifications || []))
       .catch(console.error)
       .finally(() => setLoading(false));
   }, []);
